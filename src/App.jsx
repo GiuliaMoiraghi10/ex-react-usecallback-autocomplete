@@ -1,6 +1,19 @@
 import './App.css'
+import { useState, useEffect, useCallback } from 'react'
 
-import { useState, useEffect } from 'react'
+// creo una funzione di debounce generica a cui passo una callback che voglio debounceare e un delay (300ms)
+// ritorno la funzione debouceata che passo come callback. La funzione va a pulire timeout e setta timeout come risultato di un altro setTimeout
+// in questo modo evito di ripetere la stessa richiesta, ma verrà ripetuta solo dopo 300ms
+// in ogni caso mi serve useCallback x evitare di ricreare sempre la stessa funzione
+const debounce = (callback, delay) => {
+  let timeout
+  return (value) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      callback(value)
+    }, delay)
+  }
+}
 
 function App() {
 
@@ -26,13 +39,19 @@ function App() {
       const response = await fetch(`https://boolean-spec-frontend.vercel.app/freetestapi/products?search=${query}`)
       const data = await response.json()
       setProducts(data)
+      console.log('Richiesta API') //controllo quante chiamate fa la query
     } catch (error) {
       console.error(error)
     }
   }
 
+  // creo funzione di debounce x le chiamate fetch
+  const debouncedFetchProducts = useCallback(
+    debounce(fetchProducts, 300)
+    , [])
+
   useEffect(() => {
-    fetchProducts(query)
+    debouncedFetchProducts(query)
   }, [query])
 
 
